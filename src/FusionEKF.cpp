@@ -19,8 +19,17 @@ FusionEKF::FusionEKF() {
   // initializing matrices
   R_laser_ = MatrixXd(2, 2);
   R_radar_ = MatrixXd(3, 3);
+
+  //laser measurement matrix
   H_laser_ = MatrixXd(2, 4);
+  H_laser_ << 1, 0, 0, 0,
+	  0, 1, 0, 0;
+
+  //radar jacobian matrix
   Hj_ = MatrixXd(3, 4);
+  Hj_ << 1, 1, 0, 0,
+	  1, 1, 0, 0,
+	  1, 1, 1, 1;
 
   //measurement covariance matrix - laser
   R_laser_ << 0.0225, 0,
@@ -30,6 +39,25 @@ FusionEKF::FusionEKF() {
   R_radar_ << 0.09, 0, 0,
         0, 0.0009, 0,
         0, 0, 0.09;
+
+  
+  
+  //state vector
+  ekf_.x_ = VectorXd(4);
+
+  //initial transition matrix
+  ekf_.F_ = MatrixXd(4, 4);
+  ekf_.F_ << 1, 0, 1, 0,
+	  0, 1, 0, 1,
+	  0, 0, 1, 0,
+	  0, 0, 0, 1;
+
+  ekf_.P_ = MatrixXd(4, 4);
+  ekf_.P_ << 1, 0, 0, 0,
+	  0, 1, 0, 0,
+	  0, 0, 1000, 0,
+	  0, 0, 0, 1000;
+
 
   /**
   TODO:
