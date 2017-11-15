@@ -59,6 +59,8 @@ FusionEKF::FusionEKF() {
 	  0, 0, 0, 1000;
 
 
+
+
   /**
   TODO:
     * Finish initializing the FusionEKF.
@@ -100,6 +102,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       /**
       Initialize state.
       */
+		ekf_.x_(0)  = measurement_pack.raw_measurements_(0);
+		ekf_.x_(1) = measurement_pack.raw_measurements_(1);
     }
 
     // done initializing, no need to predict or update
