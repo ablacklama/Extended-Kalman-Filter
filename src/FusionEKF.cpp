@@ -123,10 +123,10 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
   /**
    TODO:
-     * Update the state transition matrix F according to the new elapsed time.
+     * Update the state transition matrix F according to the new elapsed time. DONE
       - Time is measured in seconds.
-     * Update the process noise covariance matrix.
-     * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
+     * Update the process noise covariance matrix. DONE
+     * Use noise_ax = 9 and noise_ay = 9 for your Q matrix. DONE
    */
    // compute the time elapsed between the current and previous measurements
   float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;
@@ -135,6 +135,15 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   ekf_.F_(0, 2) = dt;
   ekf_.F_(1, 3) = dt;
 
+  float dt2 = dt * dt;
+  float dt3 = dt2 * dt;
+  float dt4 = dt3 * dt;
+
+  ekf_.Q_ = MatrixXd(4, 4);
+  ekf_.Q_ << (dt4 / 4.0) * noise_ax, 0, (dt3 / 2)*noise_ax, 0,
+	  0, (dt4 / 4)*noise_ay, 0 (dt3 / 2)*noise_ay,
+	  (dt3 / 2)*noise_ax, 0, dt2*noise_ax, 0,
+	  0, (dt3 / 2)*noise_ay, 0, dt2*noise_ay;
 
 
 
