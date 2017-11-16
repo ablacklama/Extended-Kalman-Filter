@@ -34,7 +34,7 @@ void KalmanFilter::Predict() {
 void KalmanFilter::Update(const VectorXd &z) {
   /**
   TODO:
-    * update the state by using Kalman Filter equations
+    * update the state by using Kalman Filter equations. DONE
   */
 	VectorXd y = z - H_ * x_;
 	MatrixXd Ht = H_.transpose();
@@ -52,6 +52,29 @@ void KalmanFilter::Update(const VectorXd &z) {
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
   /**
   TODO:
-    * update the state by using Extended Kalman Filter equations
+    * update the state by using Extended Kalman Filter equations. DONE
   */
+	float x = x_(0);
+	float y = x_(1);
+	float vx = x_(2);
+	float vy = x_(3);
+
+	float rho = sqrt(x*x + y*y);
+	float theta = atan2(y, x);
+	float ro_dot = (x*vx + y*vy) / rho;
+	VectorXd z_pred = VectorXd(3);
+	z_pred << rho, theta, ro_dot;
+
+	VectorXd y_ = z - z_pred;
+
+	MatrixXd Ht = H_.transpose();
+	MatrixXd S = H_ * P_ * Ht + R_;
+	MatrixXd Si = S.inverse();
+	MatrixXd K = P_ * Ht * Si;
+
+	//new state
+	long x_size = x_.size();
+	MatrixXd I = MatrixXd::Identity(x_size, x_size);
+	x_ = x_ + (K * y_);
+	P_ = (I - K * H_) * P_;
 }
