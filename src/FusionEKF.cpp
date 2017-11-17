@@ -20,33 +20,25 @@ FusionEKF::FusionEKF() {
   previous_timestamp_ = 0;
 
   // initializing matrices
+
+  //measurement covariance matrix - laser
   R_laser_ = MatrixXd(2, 2);
+  R_laser_ << 0.0225, 0,
+	  0, 0.0225;
+
+
+  //measurement covariance matrix - radar
   R_radar_ = MatrixXd(3, 3);
+  R_radar_ << 0.09, 0, 0,
+	  0, 0.0009, 0,
+	  0, 0, 0.09;
+
+
 
   //laser measurement matrix
   H_laser_ = MatrixXd(2, 4);
   H_laser_ << 1, 0, 0, 0,
 	  0, 1, 0, 0;
-
-  //radar jacobian matrix
-  Hj_ = MatrixXd(3, 4);
- // Hj_ << 1, 1, 0, 0,
-//	  1, 1, 0, 0,
-//	  1, 1, 1, 1;
-
-  //measurement covariance matrix - laser
-  R_laser_ << 0.0225, 0,
-        0, 0.0225;
-
-  //measurement covariance matrix - radar
-  R_radar_ << 0.09, 0, 0,
-        0, 0.0009, 0,
-        0, 0, 0.09;
-
-  
-  
-  //state vector
-  ekf_.x_ = VectorXd(4);
 
   //initial transition matrix
   ekf_.F_ = MatrixXd(4, 4);
@@ -64,7 +56,7 @@ FusionEKF::FusionEKF() {
   noise_ax = 9;
   noise_ay = 9;
 
-}
+} 
 
 /**
 * Destructor.
@@ -81,12 +73,15 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
     // first measurement
     cout << "EKF: " << endl;
+
+	//state vector
+	ekf_.x_ = VectorXd(4);
     ekf_.x_ << 1, 1, 1, 1; //TODO: play around with second two values to help RMSE
 
 	float px;
 	float py;
-	float vx = 1;
-	float vy = 1;
+	float vx = 0;
+	float vy = 0;
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       /**
@@ -104,6 +99,12 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 		px = measurement_pack.raw_measurements_[0]; 
 		py = measurement_pack.raw_measurements_[1];
     }
+	// Special case initialisation problem (track 2)
+	float eps = 0.000001;
+	if (fabs(ekf_.x_(0)) < eps && fabs(ekf_.x_(1)) < eps) {
+		ekf_.x_(0) = eps;
+		ekf_.x_(1) = eps;
+	}
 
 	ekf_.x_ << px, py, vx, vy;
     // done initializing, no need to predict or update
@@ -148,7 +149,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // Radar updates
 	  ekf_.R_ = R_radar_;
-	  ekf_.H_ = tools.CalculateJacobian(measurement_pack.raw_measurements_);
+	  ekf_.H_ = tools.CalculateJacobian(ekf_.x_);
 
 	  ekf_.UpdateEKF(measurement_pack.raw_measurements_);
 	 
